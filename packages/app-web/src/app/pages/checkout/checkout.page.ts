@@ -19,7 +19,7 @@ type Country = {
 
 const countries: Country[] = [
   { name: 'Afghanistan', code: 'AF' },
-  { name: 'land Islands', code: 'AX' },
+  { name: 'Aland Islands', code: 'AX' },
   { name: 'Albania', code: 'AL' },
   { name: 'Algeria', code: 'DZ' },
   { name: 'American Samoa', code: 'AS' },

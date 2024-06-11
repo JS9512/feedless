@@ -22,7 +22,6 @@ export class LoginPage implements OnInit, OnDestroy {
   showSSO: boolean;
   loginUrl: string;
   private subscriptions: Subscription[] = [];
-  canSignUp: boolean;
   showNoSignupBanner: boolean;
   showUserPasswordLogin: boolean;
   errorMessage: string;
@@ -48,8 +47,6 @@ export class LoginPage implements OnInit, OnDestroy {
       this.showUserPasswordLogin = true;
     } else {
       this.showNoSignupBanner = true;
-      this.canSignUp =
-        this.serverConfig.isEnabled(GqlFeatureName.CanSignUp);
     }
 
     // const redirectUrl = this.activatedRoute.snapshot.queryParams.redirectUrl;

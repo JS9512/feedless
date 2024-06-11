@@ -404,7 +404,7 @@ export class GenerateFeedModalComponent
     this.isLoggedIn = this.sessionService.isAuthenticated();
 
     const maxItemsLowerLimit = this.serverConfig.getFeatureValueInt(
-      GqlFeatureName.RepositoryRetentionMaxItemsLowerLimitInt,
+      GqlFeatureName.RepositoryCapacityLowerLimitInt,
     );
     if (maxItemsLowerLimit) {
       this.formFg.controls.maxItems.addValidators([
@@ -412,7 +412,7 @@ export class GenerateFeedModalComponent
       ]);
     }
     const maxItemsUpperLimit = this.serverConfig.getFeatureValueInt(
-      GqlFeatureName.RepositoryRetentionMaxItemsUpperLimitInt,
+      GqlFeatureName.RepositoryCapacityUpperLimitInt,
     );
     if (maxItemsUpperLimit) {
       this.formFg.controls.maxItems.addValidators([
