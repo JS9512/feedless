@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  Input,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, ViewChild } from '@angular/core';
 import { ModalController, ToastController } from '@ionic/angular';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { RepositoryService } from '../../services/repository.service';
@@ -21,7 +14,7 @@ import {
   GqlScrapeRequest,
   GqlScrapeRequestInput,
   GqlStringFilterOperator,
-  GqlVisibility,
+  GqlVisibility
 } from '../../../generated/graphql';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';

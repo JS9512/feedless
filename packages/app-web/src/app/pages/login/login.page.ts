@@ -1,12 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ServerConfigService } from '../../services/server-config.service';
-import { GqlFeatureName, GqlProfileName } from '../../../generated/graphql';
+import { GqlProfileName } from '../../../generated/graphql';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounce, interval, Subscription } from 'rxjs';
