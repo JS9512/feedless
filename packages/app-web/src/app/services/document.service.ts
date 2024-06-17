@@ -1,13 +1,18 @@
 import { Injectable } from '@angular/core';
 import {
-  DeleteWebDocumentsById,
+  CreateWebDocuments,
+  DeleteWebDocumentsById, GqlCreateWebDocumentInput,
+  GqlCreateWebDocumentMutation,
+  GqlCreateWebDocumentMutationVariables,
+  GqlCreateWebDocumentsMutation,
+  GqlCreateWebDocumentsMutationVariables,
   GqlDeleteWebDocumentsByIdMutation,
   GqlDeleteWebDocumentsByIdMutationVariables,
   GqlDeleteWebDocumentsInput,
   GqlWebDocumentByIdsQuery,
   GqlWebDocumentByIdsQueryVariables,
   GqlWebDocumentsInput,
-  WebDocumentByIds,
+  WebDocumentByIds
 } from '../../generated/graphql';
 import { ApolloClient, FetchPolicy } from '@apollo/client/core';
 import { WebDocument } from '../graphql/types';
@@ -34,6 +39,23 @@ export class DocumentService {
         return response.data.webDocuments;
       });
   }
+
+  createDocuments(data: GqlCreateWebDocumentInput[]) {
+    return this.apollo
+      .mutate<
+        GqlCreateWebDocumentsMutation,
+        GqlCreateWebDocumentsMutationVariables
+      >({
+        mutation: CreateWebDocuments,
+        variables: {
+          data,
+        },
+      })
+      .then((response) => {
+        return response.data.createWebDocuments;
+      });
+  }
+
 
   // findById(id: string): Promise<WebDocument> {
   //   return this.apollo

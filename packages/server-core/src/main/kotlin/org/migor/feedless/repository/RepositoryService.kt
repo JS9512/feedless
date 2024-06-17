@@ -264,12 +264,12 @@ class RepositoryService {
       ?: repositoryDAO.findAllByVisibility(EntityVisibility.isPublic, pageable))
   }
 
-  fun findById(corrId: String, id: UUID): RepositoryEntity {
-    val sub = repositoryDAO.findById(id).orElseThrow { NotFoundException("not found ($corrId)") }
+  fun findById(corrId: String, repositoryId: UUID): RepositoryEntity {
+    val sub = repositoryDAO.findById(repositoryId).orElseThrow { NotFoundException("not found ($corrId)") }
     return if (sub.visibility === EntityVisibility.isPublic) {
       sub
     } else {
-      if (sub.ownerId == getActualUserOrDefaultUser(corrId).id) {
+      if (repositoryDAO.hasViewerPermissions(getActualUserOrDefaultUser(corrId).id, repositoryId)) {
         sub
       } else {
         throw PermissionDeniedException("unauthorized ($corrId)")
@@ -428,7 +428,7 @@ private fun PluginExecutionInput.fromDto(): PluginExecution {
   return PluginExecution(id = pluginId, params = params)
 }
 
-private fun DocumentEntity.toRichArticle(propertyService: PropertyService, visibility: EntityVisibility): RichArticle {
+fun DocumentEntity.toRichArticle(propertyService: PropertyService, visibility: EntityVisibility): RichArticle {
   val article = RichArticle()
   article.id = id.toString()
   article.title = StringUtils.trimToEmpty(contentTitle)

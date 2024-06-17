@@ -12,6 +12,7 @@ import { PlayerModule } from '../player/player.module';
 import { ImageDiffModule } from '../image-diff/image-diff.module';
 import { TextDiffModule } from '../text-diff/text-diff.module';
 import { HistogramModule } from '../histogram/histogram.module';
+import { DocumentEditorModalModule } from '../../modals/document-editor-modal/document-editor-modal.module';
 
 @NgModule({
   declarations: [FeedDetailsComponent],
@@ -29,6 +30,7 @@ import { HistogramModule } from '../histogram/histogram.module';
     ImageDiffModule,
     TextDiffModule,
     HistogramModule,
+    DocumentEditorModalModule
   ],
 })
 export class FeedDetailsModule {}

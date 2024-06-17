@@ -39,7 +39,7 @@ class CloudSubscriptionResolver {
 
 
   @DgsData(parentType = DgsConstants.USER.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED)
+  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
   suspend fun subscription(dfe: DgsDataFetchingEnvironment): CloudSubscription? = coroutineScope {
     val user: User = dfe.getSource()
     user.subscriptionId?.let {

@@ -29,6 +29,7 @@ fragment SelectorsFragment on Selectors {
 fragment RepositoryFragment on Repository {
   id
   ownerId
+  groupId
   title
   description
   product

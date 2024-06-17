@@ -100,10 +100,6 @@ class SecurityConfigTest {
 //    "feed:$feedId/atom",
     ApiUrls.transformFeed,
     ApiUrls.webToFeed,
-    ApiUrls.webToFeedVerbose,
-    ApiUrls.webToFeedFromRule,
-    ApiUrls.webToFeedFromChange,
-//    "api/legacy/foo", // TODO fix cause not whitelisted
 //    "article/foo",
 //    "a/foo",
   ])

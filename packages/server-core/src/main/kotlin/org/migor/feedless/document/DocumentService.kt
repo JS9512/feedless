@@ -3,6 +3,7 @@ package org.migor.feedless.document
 import org.migor.feedless.AppProfiles
 import org.migor.feedless.PermissionDeniedException
 import org.migor.feedless.data.jpa.enums.ReleaseStatus
+import org.migor.feedless.generated.types.CreateWebDocumentInput
 import org.migor.feedless.generated.types.StringFilter
 import org.migor.feedless.plan.PlanConstraintsService
 import org.migor.feedless.repository.RepositoryDAO
@@ -132,5 +133,14 @@ class DocumentService {
           count = (it[3] as Long).toInt(),
         )
       }
+  }
+
+  fun createDocuments(documents: List<CreateWebDocumentInput>): List<DocumentEntity> {
+    documents.map {
+     it.repositoryId.id
+    }.distinct()
+
+    
+    TODO()
   }
 }

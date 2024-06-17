@@ -57,7 +57,17 @@ import { inlineImagePlugin } from './inline-image.widget';
 import { checkboxPlugin } from './checkbox.widget';
 import { IterMode } from '@lezer/common';
 import { addLineHighlight, lineHighlightField } from './line.decorator';
-import { debounce } from 'lodash-es';
+import { debounce, isBoolean, isUndefined } from 'lodash-es';
+
+export type Controls = {
+  bold?: boolean
+  italic?: boolean
+  header?: boolean
+  list?: boolean
+  link?: boolean
+  attachment?: boolean
+  code?: boolean
+}
 
 function getCursorTooltips(state: EditorState): readonly Tooltip[] {
   return [];
@@ -126,7 +136,7 @@ export class CodeEditorComponent implements AfterViewInit, OnChanges {
   readOnly: boolean = false;
 
   @Input()
-  controls: boolean = true;
+  controls: boolean | Controls = true;
 
   @Input()
   autofocus: boolean = false;
@@ -372,5 +382,15 @@ export class CodeEditorComponent implements AfterViewInit, OnChanges {
     //   console.log('scrollLeft', scrollLeft)
     //   this.editorView.scrollDOM.scrollLeft = scrollLeft;
     // }
+  }
+
+  isEnabled(property: keyof Controls): boolean {
+    if (isUndefined(this.controls)) {
+      return false
+    }
+    if (isBoolean(this.controls)) {
+      return this.controls
+    }
+    return this.controls[property]
   }
 }

@@ -25,6 +25,11 @@ import {
   RemoteFeedModalComponent,
   RemoteFeedModalComponentProps,
 } from '../modals/remote-feed-modal/remote-feed-modal.component';
+import {
+  DocumentEditorModalComponent,
+  DocumentEditorModalComponentProps
+} from '../modals/document-editor-modal/document-editor-modal.component';
+import { WebDocument } from '../graphql/types';
 
 @Injectable({
   providedIn: 'root',
@@ -80,6 +85,20 @@ export class ModalService {
     });
     await modal.present();
     const { data, role } = await modal.onDidDismiss<string[]>();
+    return data;
+  }
+
+  async openDocumentEditor(
+    componentProps: DocumentEditorModalComponentProps,
+  ): Promise<WebDocument | undefined> {
+    const modal = await this.modalCtrl.create({
+      component: DocumentEditorModalComponent,
+      componentProps,
+      showBackdrop: true,
+      backdropDismiss: true,
+    });
+    await modal.present();
+    const { data} = await modal.onDidDismiss<WebDocument>();
     return data;
   }
 

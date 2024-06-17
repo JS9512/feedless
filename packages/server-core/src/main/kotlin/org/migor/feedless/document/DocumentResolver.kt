@@ -16,6 +16,7 @@ import org.migor.feedless.common.PropertyService
 import org.migor.feedless.generated.DgsConstants
 import org.migor.feedless.generated.types.Activity
 import org.migor.feedless.generated.types.ActivityItem
+import org.migor.feedless.generated.types.CreateWebDocumentInput
 import org.migor.feedless.generated.types.DeleteWebDocumentsInput
 import org.migor.feedless.generated.types.Repository
 import org.migor.feedless.generated.types.WebDocument
@@ -68,6 +69,19 @@ class DocumentResolver {
   }
 
   @Throttled
+  @DgsMutation
+  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  suspend fun createWebDocuments(
+    @InputArgument data: List<CreateWebDocumentInput>,
+    @RequestHeader(ApiParams.corrId) corrId: String,
+  ): List<WebDocument> = coroutineScope {
+    log.info("[$corrId] createWebDocuments $data")
+    val documents = documentService.createDocuments(data)
+    documents.map{ it.toDto(propertyService)}
+  }
+
+
+  @Throttled
   @DgsQuery
   @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
   suspend fun webDocuments(
@@ -85,7 +99,7 @@ class DocumentResolver {
   }
 
   @DgsData(parentType = DgsConstants.REPOSITORY.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED)
+  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
   suspend fun documentCount(dfe: DgsDataFetchingEnvironment): Long = coroutineScope {
     val repository: Repository = dfe.getSource()
     documentDAO.countByRepositoryId(UUID.fromString(repository.id))

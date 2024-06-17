@@ -29,6 +29,7 @@ import org.migor.feedless.data.jpa.EntityWithUUID
 import org.migor.feedless.data.jpa.StandardJpaFields
 import org.migor.feedless.data.jpa.enums.EntityVisibility
 import org.migor.feedless.data.jpa.enums.ProductCategory
+import org.migor.feedless.data.jpa.enums.toDto
 import org.migor.feedless.data.jpa.models.SegmentationEntity
 import org.migor.feedless.data.jpa.models.SourceEntity
 import org.migor.feedless.data.jpa.models.toDto
@@ -50,13 +51,13 @@ import org.migor.feedless.generated.types.NumericalFilterParamsInput
 import org.migor.feedless.generated.types.PluginExecution
 import org.migor.feedless.generated.types.PluginExecutionParams
 import org.migor.feedless.generated.types.PluginExecutionParamsInput
-import org.migor.feedless.generated.types.ProductCategory as ProductCategoryDto
 import org.migor.feedless.generated.types.Repository
 import org.migor.feedless.generated.types.Retention
 import org.migor.feedless.generated.types.Selectors
 import org.migor.feedless.generated.types.SelectorsInput
 import org.migor.feedless.generated.types.StringFilterParams
 import org.migor.feedless.generated.types.StringFilterParamsInput
+import org.migor.feedless.group.GroupEntity
 import org.migor.feedless.mail.MailForwardEntity
 import org.migor.feedless.user.UserEntity
 import org.springframework.context.annotation.Lazy
@@ -144,6 +145,23 @@ open class AbstractRepositoryEntity : EntityWithUUID() {
   )
   open var owner: UserEntity? = null
 
+  @Column(name = StandardJpaFields.groupId)
+  open var groupId: UUID? = null
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(
+    name = StandardJpaFields.groupId,
+    referencedColumnName = StandardJpaFields.id,
+    insertable = false,
+    updatable = false,
+    nullable = true,
+    foreignKey = ForeignKey(
+      name = "fk_repository__to__group",
+      foreignKeyDefinition = "FOREIGN KEY (group_id) REFERENCES t_group(id) ON DELETE SET NULL"
+    )
+  )
+  open var group: GroupEntity? = null
+
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "repositoryId", cascade = [CascadeType.ALL])
   open var sources: MutableList<SourceEntity> = mutableListOf()
 
@@ -170,6 +188,7 @@ fun RepositoryEntity.toDto(): Repository {
   return Repository.newBuilder()
     .id(id.toString())
     .ownerId(ownerId.toString())
+    .groupId(groupId?.toString())
     .product(product.toDto())
     .disabledFrom(disabledFrom?.time)
     .plugins(plugins.map { it.toDto() })
@@ -191,13 +210,13 @@ fun RepositoryEntity.toDto(): Repository {
     .build()
 }
 
-private fun ProductCategory.toDto(): ProductCategoryDto {
-  return when(this) {
-    ProductCategory.rssProxy -> ProductCategoryDto.rssProxy
-    ProductCategory.visualDiff -> ProductCategoryDto.visualDiff
-    else -> throw IllegalArgumentException("Unsupported product name: $this")
-  }
-}
+//fun ProductCategory.toDto(): ProductCategoryDto {
+//  return when(this) {
+//    ProductCategory.rssProxy -> ProductCategoryDto.rssProxy
+//    ProductCategory.visualDiff -> ProductCategoryDto.visualDiff
+//    else -> throw IllegalArgumentException("Unsupported product name: $this")
+//  }
+//}
 
 private fun org.migor.feedless.repository.PluginExecution.toDto(): PluginExecution {
   return PluginExecution.newBuilder()

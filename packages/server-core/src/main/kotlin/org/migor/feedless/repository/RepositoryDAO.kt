@@ -52,13 +52,38 @@ interface RepositoryDAO : JpaRepository<RepositoryEntity, UUID> {
   )
   fun updateLastUpdatedAt(@Param("id") id: UUID, @Param("lastUpdatedAt") lastUpdatedAt: Date)
 
-  fun findAllByOwnerId(id: UUID, pageable: PageRequest): List<RepositoryEntity>
+  @Query(
+    """
+    SELECT r FROM RepositoryEntity r
+    WHERE r.ownerId = :ownerId OR r.groupId = (
+        SELECT g.id FROM GroupEntity g
+        INNER JOIN GroupMembershipEntity m ON g.id = m.groupId
+        WHERE m.userId = :ownerId
+    )
+    """
+  )
+  fun findAllByOwnerId(@Param("ownerId") ownerId: UUID, pageable: PageRequest): List<RepositoryEntity>
 
   fun countByOwnerId(id: UUID): Int
   fun countByOwnerIdAndArchived(id: UUID, archived: Boolean): Int
   fun countAllByOwnerIdAndProduct(it: UUID, product: ProductCategory): Int
   fun countAllByVisibility(visibility: EntityVisibility): Int
   fun findAllByVisibility(visibility: EntityVisibility, pageable: PageRequest): List<RepositoryEntity>
+  fun existsByTitleAndOwnerId(title: String, id: UUID): Boolean
+
+  fun findByTitleAndOwnerId(title: String, ownerId: UUID): RepositoryEntity
+
+  @Query(
+    """
+    SELECT case when count(r)> 0 then true else false end FROM RepositoryEntity r
+    WHERE r.ownerId = :ownerId OR r.groupId = (
+        SELECT g.id FROM GroupEntity g
+        INNER JOIN GroupMembershipEntity m ON g.id = m.groupId
+        WHERE m.userId = :ownerId
+    ) AND r.id = :repositoryId
+    """
+  )
+  fun hasViewerPermissions(@Param("ownerId") userId: UUID, @Param("repositoryId") repositoryId: UUID): Boolean
 
 //  @Modifying
 //  @Query(

@@ -13,3 +13,9 @@ query webDocumentByIds($data: WebDocumentsInput!) {
 mutation deleteWebDocumentsById($data: DeleteWebDocumentsInput!) {
   deleteWebDocuments(data: $data)
 }
+
+mutation createWebDocuments($data: [CreateWebDocumentInput!]!) {
+  createWebDocuments(data: $data) {
+    ...WebDocumentFragment
+  }
+}

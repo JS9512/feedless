@@ -4,7 +4,13 @@ import jakarta.annotation.PostConstruct
 import org.migor.feedless.AppProfiles
 import org.migor.feedless.BadRequestException
 import org.migor.feedless.common.PropertyService
+import org.migor.feedless.data.jpa.enums.EntityVisibility
 import org.migor.feedless.data.jpa.enums.ProductCategory
+import org.migor.feedless.feed.LegacyFeedService
+import org.migor.feedless.group.GroupDAO
+import org.migor.feedless.group.GroupEntity
+import org.migor.feedless.group.GroupMembershipDAO
+import org.migor.feedless.group.GroupService
 import org.migor.feedless.plan.FeatureGroupDAO
 import org.migor.feedless.plan.FeatureGroupEntity
 import org.migor.feedless.plan.FeatureName
@@ -15,6 +21,8 @@ import org.migor.feedless.plan.PricedProductDAO
 import org.migor.feedless.plan.PricedProductEntity
 import org.migor.feedless.plan.ProductDAO
 import org.migor.feedless.plan.ProductEntity
+import org.migor.feedless.repository.RepositoryDAO
+import org.migor.feedless.repository.RepositoryEntity
 import org.migor.feedless.secrets.UserSecretDAO
 import org.migor.feedless.secrets.UserSecretEntity
 import org.migor.feedless.secrets.UserSecretType
@@ -64,6 +72,21 @@ class Seeder {
   private lateinit var userSecretDAO: UserSecretDAO
 
   @Autowired
+  private lateinit var repositoryDAO: RepositoryDAO
+
+  @Autowired
+  private lateinit var groupDAO: GroupDAO
+
+  @Autowired
+  private lateinit var groupService: GroupService
+
+  @Autowired
+  private lateinit var legacyFeedService: LegacyFeedService
+
+  @Autowired
+  private lateinit var groupMembershipDAO: GroupMembershipDAO
+
+  @Autowired
   private lateinit var userDAO: UserDAO
 
   @PostConstruct
@@ -101,7 +124,36 @@ class Seeder {
       userSecretDAO.save(userSecret)
     }
 
+    val group = seetAdminGroup()
+    if (!groupMembershipDAO.existsByUserIdAndGroupId(root.id, group.id)) {
+      groupService.addUserToGroup(root, group)
+    }
+
+
+    val repoTitleLegacyNotifications = legacyFeedService.getRepoTitleForLegacyFeedNotifications()
+    if (!repositoryDAO.existsByTitleAndOwnerId(repoTitleLegacyNotifications, root.id)) {
+      val repo = RepositoryEntity()
+      repo.title = repoTitleLegacyNotifications
+      repo.description = ""
+      repo.ownerId = root.id
+      repo.groupId = group.id
+      repo.visibility = EntityVisibility.isPrivate
+      repo.product = ProductCategory.feedless
+      repo.sourcesSyncExpression = ""
+
+      repositoryDAO.save(repo)
+    }
+
+
     return root
+  }
+
+  private fun seetAdminGroup(): GroupEntity {
+    val group = GroupEntity()
+    val groupName = groupService.getAdminGroupName()
+    group.name = groupName
+
+    return groupDAO.findByName(groupName) ?: groupDAO.save(group)
   }
 
   private fun createAnonymousUser() = createUser(
@@ -121,7 +173,7 @@ class Seeder {
     val user = UserEntity()
     user.email = email
     user.root = isRoot
-    user.product = ProductCategory.system
+    user.product = ProductCategory.feedless
     user.anonymous = isAnonymous
     user.hasAcceptedTerms = isRoot || isAnonymous
 //    user.planId = planDAO.findByNameAndProduct(plan, ProductName.system)!!.id
@@ -143,6 +195,7 @@ class Seeder {
         FeatureName.publicRepositoryBool to asBoolFeature(false),
         FeatureName.pluginsBool to asBoolFeature(false),
         FeatureName.legacyApiBool to asBoolFeature(true),
+        FeatureName.legacyAnonymousFeedSupportEolInt to asIntFeature(1718265907060),
 
         FeatureName.repositoryCapacityLowerLimitInt to asIntFeature(0),
         FeatureName.repositoryCapacityUpperLimitInt to asIntFeature(0),
@@ -172,6 +225,7 @@ class Seeder {
 //          FeatureName.refreshRateInMinutesLowerLimitInt to asIntFeature(120),
           FeatureName.publicRepositoryBool to asBoolFeature(true),
           FeatureName.pluginsBool to asBoolFeature(true),
+          FeatureName.legacyAnonymousFeedSupportEolInt to asIntFeature(null),
 
           FeatureName.repositoryCapacityLowerLimitInt to asIntFeature(2),
           FeatureName.repositoryCapacityUpperLimitInt to asIntFeature(10000),
@@ -391,7 +445,7 @@ class Seeder {
 
   //
 
-  private fun asIntFeature(value: Int?): FeatureValueEntity {
+  private fun asIntFeature(value: Long?): FeatureValueEntity {
     val feature = FeatureValueEntity()
     feature.valueType = FeatureValueType.number
     feature.valueInt = value

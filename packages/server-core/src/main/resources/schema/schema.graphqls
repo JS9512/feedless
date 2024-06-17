@@ -61,7 +61,7 @@ type FeatureBooleanValue {
 }
 
 type FeatureIntValue {
-  value: Int!
+  value: Long!
 }
 
 type FeatureValue {
@@ -83,8 +83,9 @@ type Repository {
   id: ID!
   description: String!
   title: String!
-  ownerId: ID!
   product: ProductCategory!
+  ownerId: ID!
+  groupId: ID
   visibility: Visibility!
   refreshCron: String!
   tags: [String!]!
@@ -237,7 +238,7 @@ input FeatureBooleanValueInput {
 }
 
 input FeatureIntValueInput {
-  value: Int!
+  value: Long!
 }
 
 input DeleteAnnotationInput {
@@ -306,7 +307,7 @@ input CreateWebDocumentInput {
   contentText: String
   tags: [String!]
   contentTitle: String!
-  createdAt: Long!
+  publishedAt: Long!
   url: String!
   repositoryId: RepositoryUniqueWhereInput!
   parent: WebDocumentUniqueWhereInput
@@ -837,7 +838,12 @@ type User {
   purgeScheduledFor: Long
   secrets: [UserSecret!]!
   subscription: CloudSubscription
+  groups: [Group!]!
   subscriptionId: ID
+}
+
+type Group {
+  id: ID!
 }
 
 type CloudSubscription {

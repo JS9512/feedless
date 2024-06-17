@@ -33,7 +33,7 @@
     </ion-button>
   </ion-buttons>
 
-  <ion-buttons slot="end" *ngIf="isOwner">
+  <ion-buttons slot="end" *ngIf="canEdit">
     <ion-modal trigger="open-sources-modal">
       <ng-template>
         <ion-header>
@@ -172,7 +172,7 @@
           {{ fromNow(repository.nextUpdateAt) }}
           <ion-button
             size="small"
-            *ngIf="isOwner"
+            *ngIf="canEdit"
             [disabled]="repository.sources.length === 0"
             (click)="refreshSources()"
             shape="round"
@@ -188,7 +188,7 @@
           {{ getRetentionStrategy() }}
           <ion-button
             size="small"
-            *ngIf="isOwner"
+            *ngIf="canEdit"
             (click)="editRepository(['storage'])"
             shape="round"
             class="ion-margin-start"
@@ -223,7 +223,7 @@
       <span *ngIf="viewModeFc.value === viewModeHistogram">Activity</span>
     </h3>
 
-    <div style="align-content: center">
+    <div style="align-content: center;">
       <ion-segment
         mode="ios"
         style="max-width: 300px"
@@ -238,6 +238,17 @@
         >
       </ion-segment>
     </div>
+
+    <ion-buttons>
+      <ion-button *ngIf="canEdit"
+                  size="small"
+                  (click)="createDocument()">
+        <ion-icon name="add-outline" slot="start"></ion-icon>
+        <ion-label>
+          New
+        </ion-label>
+      </ion-button>
+    </ion-buttons>
   </div>
 
   <ion-spinner name="dots" *ngIf="loading"></ion-spinner>
@@ -280,7 +291,7 @@
 
     <ng-container *ngIf="viewModeFc.value === viewModeList">
       <ion-list style="border-radius: 8px">
-        <ion-toolbar *ngIf="isOwner" style="padding-left: 15px">
+        <ion-toolbar *ngIf="canEdit" style="padding-left: 15px">
           <ion-buttons slot="start">
             <ion-checkbox
               [formControl]="selectAllFc"
@@ -311,7 +322,7 @@
           <ion-item lines="full">
             <ion-checkbox
               slot="start"
-              *ngIf="isOwner"
+              *ngIf="canEdit"
               class="doc__checkbox"
               [formControl]="document.fc"
               aria-label="toggle document"

@@ -1,40 +1,14 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  Input,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
-import {
-  GqlFeedlessPlugins,
-  GqlProductCategory,
-  GqlScrapeRequest,
-  GqlVisibility,
-  GqlWebDocumentField,
-} from '../../../generated/graphql';
-import {
-  FeedlessPlugin,
-  Repository,
-  SubscriptionSource,
-  WebDocument,
-} from '../../graphql/types';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { GqlFeedlessPlugins, GqlProductCategory, GqlScrapeRequest, GqlVisibility, GqlWebDocumentField } from '../../../generated/graphql';
+import { FeedlessPlugin, Repository, Session, SubscriptionSource, User, WebDocument } from '../../graphql/types';
 import {
   GenerateFeedAccordion,
   GenerateFeedModalComponentProps,
-  getScrapeRequest,
+  getScrapeRequest
 } from '../../modals/generate-feed-modal/generate-feed-modal.component';
 import { ModalService } from '../../services/modal.service';
-import {
-  AlertController,
-  ModalController,
-  PopoverController,
-  ToastController,
-} from '@ionic/angular';
-import {
-  FeedWithRequest,
-  tagsToString,
-} from '../feed-builder/feed-builder.component';
+import { AlertController, ModalController, PopoverController, ToastController } from '@ionic/angular';
+import { FeedWithRequest, tagsToString } from '../feed-builder/feed-builder.component';
 import { RepositoryService } from '../../services/repository.service';
 import { ArrayElement } from '../../types';
 import { BubbleColor } from '../bubble/bubble.component';
@@ -81,11 +55,11 @@ export class FeedDetailsComponent implements OnInit, OnDestroy {
   protected readonly dateFormat = dateFormat;
   showFullDescription: boolean = false;
   protected playDocument: WebDocument;
-  private userId: string;
+  private user: User;
   private subscriptions: Subscription[] = [];
   currentPage: number;
   protected loading: boolean;
-  protected isOwner: boolean;
+  protected canEdit: boolean;
   protected selectAllFc = new FormControl<boolean>(false);
   protected selectedCount: number = 0;
   viewModeFc = new FormControl<ViewMode>('list');
@@ -129,7 +103,7 @@ export class FeedDetailsComponent implements OnInit, OnDestroy {
     this.plugins = await this.pluginService.listPlugins();
     this.subscriptions.push(
       this.sessionService.getSession().subscribe((session) => {
-        this.userId = session.user?.id;
+        this.user = session.user;
         this.assessIsOwner();
       }),
       this.selectAllFc.valueChanges.subscribe((isChecked) => {
@@ -420,7 +394,9 @@ export class FeedDetailsComponent implements OnInit, OnDestroy {
   }
 
   private assessIsOwner() {
-    this.isOwner = this.repository?.ownerId === this.userId;
+    if (this.repository) {
+      this.canEdit = this.repository.ownerId === this.user.id || this.user.groups.map(group => group.id).includes(this.repository.groupId);
+    }
     this.changeRef.detectChanges();
   }
 
@@ -474,5 +450,20 @@ export class FeedDetailsComponent implements OnInit, OnDestroy {
     });
 
     await toast.present();
+  }
+
+  async createDocument() {
+    const document = await this.modalService.openDocumentEditor({});
+    await this.documentService.createDocuments([
+      {
+        url: document.url,
+        contentTitle: document.contentTitle,
+        contentText: document.contentText,
+        publishedAt: document.publishedAt,
+        repositoryId: {
+          id: this.repository.id
+        }
+      }
+    ])
   }
 }

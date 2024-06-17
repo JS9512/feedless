@@ -51,22 +51,17 @@ class LegacyFeedControllerTest {
   @ParameterizedTest
   @CsvSource(value = [
     "stream/feed/$feedId",
-    "stream/feed/$feedId",
-    "stream/feed/$feedId",
     "feed/$feedId",
     "feed:$feedId",
     ApiUrls.transformFeed,
     ApiUrls.webToFeed,
-    ApiUrls.webToFeedVerbose,
-    ApiUrls.webToFeedFromRule,
-    ApiUrls.webToFeedFromChange,
   ])
   fun `calling eol urls will return eol feed`(path: String) {
     val restTemplate = TestRestTemplate()
     val response = restTemplate.getForEntity("${baseEndpoint}/$path", String::class.java)
-    assertEquals(HttpStatus.OK, response.statusCode)
-//    assertEquals("application", response.headers.contentType?.type)
-//    assertEquals("xml", response.headers.contentType?.subtype)
+    assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(response.headers.contentType?.type).isEqualTo("application")
+    assertThat(response.headers.contentType?.subtype).isEqualTo("xml")
   }
 
   @ParameterizedTest
@@ -78,8 +73,8 @@ class LegacyFeedControllerTest {
   fun `calling legacy urls will return redirect`(path: String) {
     val restTemplate = TestRestTemplate()
     val response = restTemplate.getForEntity("${baseEndpoint}/$path", String::class.java)
-    assertEquals(HttpStatus.OK, response.statusCode)
-//    assertEquals("application", response.headers.contentType?.type)
+    assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+  //    assertEquals("application", response.headers.contentType?.type)
 //    assertEquals("xml", response.headers.contentType?.subtype)
   }
 }

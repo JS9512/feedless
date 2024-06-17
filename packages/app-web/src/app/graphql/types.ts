@@ -60,5 +60,6 @@ export type FeatureGroup = GetElementType<
 >;
 export type Feature = GetElementType<FeatureGroup['features']>;
 export type Session = GqlSessionQuery['session'];
+export type User = Session['user'];
 export type UserSecret = GqlCreateUserSecretMutation['createUserSecret'];
 export type FeedlessPlugin = GetElementType<GqlListPluginsQuery['plugins']>;
