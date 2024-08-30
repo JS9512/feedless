@@ -1,5 +1,8 @@
 package org.migor.feedless.repository
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.StringUtils
 import org.migor.feedless.AppProfiles
 import org.migor.feedless.BadRequestException
@@ -65,6 +68,7 @@ fun toPageRequest(page: Int?, pageSize: Int?): Pageable {
 
 @Service
 @Profile(AppProfiles.database)
+@Transactional
 class RepositoryService {
 
   private val log = LoggerFactory.getLogger(RepositoryService::class.simpleName)
@@ -99,12 +103,13 @@ class RepositoryService {
   @Autowired
   private lateinit var scrapeActionDAO: ScrapeActionDAO
 
-  @Transactional
-  fun create(corrId: String, data: RepositoriesCreateInput): List<Repository> {
+  suspend fun create(corrId: String, data: RepositoriesCreateInput): List<Repository> {
     log.info("[$corrId] create repository with ${data.repositories.size} sources")
 
     val ownerId = getActualUserOrDefaultUser(corrId).id
-    val totalCount = repositoryDAO.countByOwnerId(ownerId)
+    val totalCount = withContext(Dispatchers.IO) {
+      repositoryDAO.countByOwnerId(ownerId)
+    }
     planConstraintsService.auditScrapeSourceMaxCount(totalCount, ownerId)
     if (planConstraintsService.violatesScrapeSourceMaxActiveCount(ownerId)) {
       log.info("[$corrId] violates maxActiveCount")
@@ -121,7 +126,7 @@ class RepositoryService {
     } ?: userService.getAnonymousUser().also { log.info("[$corrId] fallback to user anonymous") }
   }
 
-  private fun createSubscription(
+  private suspend fun createSubscription(
     corrId: String,
     ownerId: UUID,
     subInput: RepositoryCreateInput
@@ -190,7 +195,7 @@ class RepositoryService {
     return mailForwardDAO.save(forward)
   }
 
-  private fun createScrapeSource(
+  private suspend fun createScrapeSource(
     corrId: String,
     ownerId: UUID,
     req: SourceInput,
@@ -224,7 +229,6 @@ class RepositoryService {
   }
 
   @Cacheable(value = [CacheNames.FEED_SHORT_TTL], key = "\"repo/\" + #repositoryId + #tag")
-  @Transactional(readOnly = true)
   fun getFeedByRepositoryId(corrId: String, repositoryId: String, page: Int, tag: String? = null, shareKey: String? = null): JsonFeed {
     val id = UUID.fromString(repositoryId)
     val repository = findById(corrId, id, shareKey)
@@ -298,7 +302,7 @@ class RepositoryService {
     repositoryDAO.delete(sub)
   }
 
-  fun calculateScheduledNextAt(cron: String, ownerId: UUID, product: ProductCategory, after: LocalDateTime): Date {
+  suspend fun calculateScheduledNextAt(cron: String, ownerId: UUID, product: ProductCategory, after: LocalDateTime): Date {
     return planConstraintsService.coerceMinScheduledNextAt(
       Date(),
       nextCronDate(cron, after),
@@ -307,9 +311,10 @@ class RepositoryService {
     )
   }
 
-
-  fun update(corrId: String, id: UUID, data: RepositoryUpdateDataInput): RepositoryEntity {
-    val repository = repositoryDAO.findById(id).orElseThrow()
+  suspend fun update(corrId: String, id: UUID, data: RepositoryUpdateDataInput): RepositoryEntity {
+    val repository = withContext(Dispatchers.IO){
+      repositoryDAO.findById(id).orElseThrow()
+    }
     if (repository.ownerId != sessionService.userId()) {
       throw PermissionDeniedException("not authorized")
     }
@@ -354,7 +359,7 @@ class RepositoryService {
         log.info("[$corrId] retentionMaxItems ${it.set}")
       }
       if (it.maxAgeDays != null || it.maxCapacity != null) {
-        documentService.applyRetentionStrategy(corrId, repository)
+        documentService.applyRetentionStrategy(corrId, repository.id)
       }
     }
 

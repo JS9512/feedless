@@ -48,7 +48,7 @@ class FeatureService {
     } ?: false
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   fun findAllByProduct(product: ProductCategory): List<Feature> {
     val featureGroup = productDAO.findByPartOfAndBaseProductIsTrue(product)?.featureGroup
       ?: featureGroupDAO.findByParentFeatureGroupIdIsNull()!!

@@ -48,7 +48,7 @@ class OrderResolver {
   lateinit var licenseDAO: LicenseDAO
 
   @DgsQuery
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun orders(
     @RequestHeader(ApiParams.corrId) corrId: String,
     @InputArgument data: OrdersInput
@@ -70,21 +70,21 @@ class OrderResolver {
     }
 
   @DgsData(parentType = DgsConstants.ORDER.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun product(dfe: DgsDataFetchingEnvironment): Product = coroutineScope {
     val order: Order = dfe.getSource()
     productDAO.findById(UUID.fromString(order.productId)).orElseThrow().toDTO()
   }
 
   @DgsData(parentType = DgsConstants.ORDER.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun user(dfe: DgsDataFetchingEnvironment): User = coroutineScope {
     val order: Order = dfe.getSource()
     userDAO.findById(UUID.fromString(order.userId)).orElseThrow().toDTO()
   }
 
   @DgsData(parentType = DgsConstants.ORDER.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun licenses(dfe: DgsDataFetchingEnvironment): List<License> = coroutineScope {
     val order: Order = dfe.getSource()
     licenseDAO.findAllByOrderId(UUID.fromString(order.id)).map { it.toDTO() }

@@ -6,7 +6,9 @@ import com.linecorp.kotlinjdsl.querymodel.jpql.predicate.Predicatable
 import com.linecorp.kotlinjdsl.render.jpql.JpqlRenderContext
 import com.linecorp.kotlinjdsl.support.spring.data.jpa.extension.createQuery
 import jakarta.persistence.EntityManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.asynchttpclient.exception.TooManyConnectionsPerHostException
 import org.migor.feedless.AppProfiles
 import org.migor.feedless.PermissionDeniedException
@@ -42,8 +44,10 @@ import org.springframework.context.annotation.Profile
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -53,6 +57,7 @@ import kotlin.jvm.optionals.getOrNull
 
 @Service
 @Profile(AppProfiles.database)
+@Transactional
 class DocumentService {
 
   private val log = LoggerFactory.getLogger(DocumentService::class.simpleName)
@@ -62,6 +67,9 @@ class DocumentService {
 
   @Autowired
   private lateinit var documentDAO: DocumentDAO
+
+  @Autowired
+  private lateinit var transactionManager: PlatformTransactionManager
 
   @Autowired
   private lateinit var entityManager: EntityManager
@@ -164,17 +172,27 @@ class DocumentService {
     return whereStatements
   }
 
-  @Transactional(propagation = Propagation.REQUIRED)
-  fun applyRetentionStrategy(corrId: String, repository: RepositoryEntity) {
+  suspend fun applyRetentionStrategy(corrId: String, repositoryId: UUID) {
+    val repository = withContext(Dispatchers.IO) {
+      repositoryDAO.findById(repositoryId).orElseThrow()
+    }
     val retentionSize =
       planConstraintsService.coerceRetentionMaxCapacity(
         repository.retentionMaxCapacity,
         repository.ownerId,
         repository.product
       )
+
     if (retentionSize != null && retentionSize > 0) {
       log.debug("[$corrId] applying retention with maxItems=$retentionSize")
-      documentDAO.deleteAllByRepositoryIdAndStatusWithSkip(repository.id, ReleaseStatus.released, retentionSize)
+      withContext(Dispatchers.IO) {
+        val transactionTemplate = TransactionTemplate(transactionManager)
+        transactionTemplate.executeWithoutResult {
+          runBlocking {
+            documentDAO.deleteAllByRepositoryIdAndStatusWithSkip(repository.id, ReleaseStatus.released, retentionSize)
+          }
+        }
+      }
     } else {
       log.debug("[$corrId] no retention with maxItems given")
     }
@@ -185,22 +203,24 @@ class DocumentService {
       repository.product
     )
       ?.let { maxAgeDays ->
-        log.debug("[$corrId] applying retention with maxAgeDays=$maxAgeDays")
-        val maxDate = Date.from(
-          LocalDateTime.now().minus(maxAgeDays.toLong(), ChronoUnit.DAYS).atZone(ZoneId.systemDefault()).toInstant()
-        )
-        if (repository.retentionMaxAgeDaysReferenceField == MaxAgeDaysDateField.startingAt) {
-          documentDAO.deleteAllByRepositoryIdAndStartingAtBeforeAndStatus(
-            repository.id,
-            maxDate,
-            ReleaseStatus.released
+        withContext(Dispatchers.IO) {
+          log.debug("[$corrId] applying retention with maxAgeDays=$maxAgeDays")
+          val maxDate = Date.from(
+            LocalDateTime.now().minus(maxAgeDays.toLong(), ChronoUnit.DAYS).atZone(ZoneId.systemDefault()).toInstant()
           )
-        } else {
-          documentDAO.deleteAllByRepositoryIdAndPublishedAtBeforeAndStatus(
-            repository.id,
-            maxDate,
-            ReleaseStatus.released
-          )
+          if (repository.retentionMaxAgeDaysReferenceField == MaxAgeDaysDateField.startingAt) {
+            documentDAO.deleteAllByRepositoryIdAndStartingAtBeforeAndStatus(
+              repository.id,
+              maxDate,
+              ReleaseStatus.released
+            )
+          } else {
+            documentDAO.deleteAllByRepositoryIdAndPublishedAtBeforeAndStatus(
+              repository.id,
+              maxDate,
+              ReleaseStatus.released
+            )
+          }
         }
 
       } ?: log.debug("[$corrId] no retention with maxAgeDays given")
@@ -329,7 +349,7 @@ class DocumentService {
               document.status = ReleaseStatus.released
               log.debug("[$corrId] releasing document")
               documentDAO.save(document)
-              applyRetentionStrategy(corrId, repository)
+              applyRetentionStrategy(corrId, repository.id)
             }
           }
 

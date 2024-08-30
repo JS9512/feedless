@@ -18,7 +18,7 @@ import java.util.*
 @Profile(AppProfiles.database)
 interface DocumentDAO : JpaRepository<DocumentEntity, UUID>, KotlinJdslJpqlExecutor {
 
-  @Modifying
+  @Modifying(clearAutomatically = true)
   @Query(
     """
     DELETE FROM DocumentEntity d
@@ -37,42 +37,17 @@ interface DocumentDAO : JpaRepository<DocumentEntity, UUID>, KotlinJdslJpqlExecu
 
   fun deleteAllByRepositoryIdAndStartingAtBeforeAndStatus(id: UUID, maxDate: Date, released: ReleaseStatus)
 
-  @Modifying
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  override fun deleteById(id: UUID)
+//  @Modifying
+//  @Transactional(propagation = Propagation.REQUIRES_NEW)
+//  override fun deleteById(id: UUID)
 
-  @Query(
-    """
-    SELECT D FROM DocumentEntity D
-    WHERE D.url = :url and D.repositoryId = :repositoryId
-    """
-  )
-  fun findByUrlAndRepositoryId(
-    @Param("url") url: String,
-    @Param("repositoryId") repositoryId: UUID
-  ): DocumentEntity?
+  fun findFirstByUrlAndRepositoryId(url: String, repositoryId: UUID): DocumentEntity?
 
 
-//  fun existsByContentTitleAndRepositoryId(title: String, repositoryId: UUID): Boolean
   fun findByContentTitleAndRepositoryId(title: String, repositoryId: UUID): DocumentEntity?
 
   fun countByRepositoryId(id: UUID): Long
 
-//  @Query(
-//    """
-//    SELECT date_part('year', released_at\:\:date) as year,
-//           date_part('month', released_at\:\:date) AS month,
-//           date_part('day', released_at\:\:date) AS day,
-//           COUNT(id)
-//    FROM t_document
-//    WHERE released_at >= date_trunc('month', current_date - interval '1' month)
-//       and repository_id = ?1
-//    GROUP BY year, month, day
-//    ORDER BY year, month, day
-//    """,
-//    nativeQuery = true
-//  )
-//  fun histogramPerDayByStreamIdOrImporterId(streamId: UUID): List<Array<Any>>
   fun deleteAllByRepositoryIdAndIdIn(repositoryId: UUID, ids: List<UUID>)
   fun deleteAllByRepositoryIdAndId(repositoryId: UUID, fromString: UUID?)
   fun findAllBySourceId(sourceId: UUID, pageable: PageRequest): List<DocumentEntity>

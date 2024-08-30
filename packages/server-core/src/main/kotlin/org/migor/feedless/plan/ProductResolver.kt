@@ -40,7 +40,7 @@ class ProductResolver {
 
   @Throttled
   @DgsQuery
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun products(
     @RequestHeader(ApiParams.corrId) corrId: String,
     @InputArgument data: ProductsWhereInput
@@ -51,14 +51,14 @@ class ProductResolver {
     }
 
 //  @DgsData(parentType = DgsConstants.CLOUDSUBSCRIPTION.TYPE_NAME)
-//  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+//  @Transactional
 //  suspend fun product(dfe: DgsDataFetchingEnvironment): Product = coroutineScope {
 //    val cloudsubscription: Plan = dfe.getSource()
 //    productDAO.findById(UUID.fromString(cloudsubscription.productId)).orElseThrow().toDTO()
 //  }
 
   @DgsData(parentType = DgsConstants.PRODUCT.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun prices(dfe: DgsDataFetchingEnvironment): List<PricedProduct> = coroutineScope {
     val product: Product = dfe.getSource()
     pricedProductDAO.findAllByProductId(UUID.fromString(product.id)).map { it.toDto() }

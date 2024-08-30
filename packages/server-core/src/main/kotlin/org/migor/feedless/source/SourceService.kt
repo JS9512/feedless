@@ -1,5 +1,7 @@
 package org.migor.feedless.source
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.migor.feedless.AppProfiles
 import org.migor.feedless.ResumableHarvestException
 import org.migor.feedless.actions.ClickPositionActionEntity
@@ -40,14 +42,17 @@ class SourceService {
   private lateinit var repositoryHarvester: RepositoryHarvester
 
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  fun processSourcePipeline(corrId: String, sourceId: UUID, jobs: List<SourcePipelineJobEntity>) {
+  @Transactional
+  suspend fun processSourcePipeline(corrId: String, sourceId: UUID, jobs: List<SourcePipelineJobEntity>) {
     log.info("[$corrId] ${jobs.size} processSourcePipeline for source $sourceId")
-    val source = sourceDAO.findById(sourceId).orElseThrow()
 
     val job = jobs.first()
     job.status = PipelineJobStatus.IN_PROGRESS
-    sourcePipelineJobDAO.save(job)
+
+    val source = withContext(Dispatchers.IO) {
+      sourcePipelineJobDAO.save(job)
+      sourceDAO.findById(sourceId).orElseThrow()
+    }
 
     try {
       if (job.attempt > 3) {

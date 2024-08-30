@@ -60,7 +60,7 @@ class DocumentResolver {
 
   @Throttled
   @DgsQuery
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun webDocument(
     @InputArgument data: WebDocumentWhereInput,
     @RequestHeader(ApiParams.corrId) corrId: String,
@@ -74,7 +74,7 @@ class DocumentResolver {
 
   @Throttled
   @DgsQuery(field = DgsConstants.QUERY.WebDocuments)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun webDocuments(
     @InputArgument data: WebDocumentsInput,
     @RequestHeader(ApiParams.corrId) corrId: String,
@@ -92,7 +92,7 @@ class DocumentResolver {
   }
 
   @DgsData(parentType = DgsConstants.REPOSITORY.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun documentCount(dfe: DgsDataFetchingEnvironment): Long = coroutineScope {
     val repository: Repository = dfe.getSource()
     documentDAO.countByRepositoryId(UUID.fromString(repository.id))
@@ -115,7 +115,7 @@ class DocumentResolver {
   }
 
   @DgsQuery(field = DgsConstants.QUERY.WebDocumentsFrequency)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun webDocumentsFrequency(
     @InputArgument where: WebDocumentsWhereInput,
     @InputArgument groupBy: WebDocumentDateField,

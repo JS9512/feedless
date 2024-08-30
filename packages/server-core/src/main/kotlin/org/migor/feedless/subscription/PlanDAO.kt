@@ -16,6 +16,7 @@ interface PlanDAO : JpaRepository<PlanEntity, UUID> {
   @Query(
     """
     select PL from PlanEntity PL
+    JOIN FETCH PL.product
     inner join ProductEntity P on P.id = PL.productId
     where PL.userId = :userId and P.partOf IN :products AND (PL.terminatedAt IS NULL OR PL.terminatedAt <= NOW())
   """

@@ -49,7 +49,7 @@ class LinceseResolver {
   }
 
   @DgsData(parentType = DgsConstants.SERVERSETTINGS.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun license(dfe: DgsDataFetchingEnvironment): LocalizedLicense = coroutineScope {
     getLicense()
   }

@@ -30,7 +30,7 @@ class PlanResolver {
 
 
   @DgsData(parentType = DgsConstants.USER.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun plan(dfe: DgsDataFetchingEnvironment, @InputArgument product: ProductCategory): Plan? = coroutineScope {
     val user: User = dfe.getSource()
     planDAO.findActiveByUserAndProductIn(UUID.fromString(user.id), listOf(product.fromDto()))?.toDto()

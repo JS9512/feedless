@@ -35,7 +35,7 @@ class FeatureResolver {
   @Throttled
   @DgsQuery
 //  @PreAuthorize("hasAuthority('USER')")
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun featureGroups(
     @RequestHeader(ApiParams.corrId) corrId: String,
     @InputArgument inherit: Boolean,

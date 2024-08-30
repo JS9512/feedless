@@ -26,7 +26,7 @@ class PluginResolver {
 
   @Throttled
   @DgsQuery
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun plugins(
     @RequestHeader(ApiParams.corrId) corrId: String,
   ): List<Plugin> = coroutineScope {

@@ -58,7 +58,7 @@ class RepositoryResolver {
 
   @Throttled
   @DgsQuery
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun repositories(
     @InputArgument data: RepositoriesInput,
     @RequestHeader(ApiParams.corrId) corrId: String,
@@ -73,7 +73,7 @@ class RepositoryResolver {
 
   @Throttled
   @DgsQuery
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun countRepositories(
     @RequestHeader(ApiParams.corrId) corrId: String,
     @InputArgument data: CountRepositoriesInput,
@@ -84,7 +84,7 @@ class RepositoryResolver {
 
   @Throttled
   @DgsQuery
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun repository(
     @InputArgument data: RepositoryWhereInput,
     @RequestHeader(ApiParams.corrId) corrId: String,
@@ -132,7 +132,7 @@ class RepositoryResolver {
 
 
   @DgsData(parentType = DgsConstants.REPOSITORY.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun sources(
     dfe: DgsDataFetchingEnvironment,
     @RequestHeader(ApiParams.corrId) corrId: String,
@@ -142,7 +142,7 @@ class RepositoryResolver {
   }
 
   @DgsData(parentType = DgsConstants.REPOSITORY.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun cronRuns(
     dfe: DgsDataFetchingEnvironment,
     @RequestHeader(ApiParams.corrId) corrId: String,
@@ -152,7 +152,7 @@ class RepositoryResolver {
   }
 
   @DgsData(parentType = DgsConstants.REPOSITORY.TYPE_NAME)
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+  @Transactional
   suspend fun tags(dfe: DgsDataFetchingEnvironment): List<String> = coroutineScope {
     val source: Repository = dfe.getSource()
     sourceDAO.findAllByRepositoryIdOrderByCreatedAtDesc(UUID.fromString(source.id))

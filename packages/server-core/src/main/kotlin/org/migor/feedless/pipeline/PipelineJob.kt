@@ -1,5 +1,6 @@
 package org.migor.feedless.pipeline
 
+import kotlinx.coroutines.runBlocking
 import org.migor.feedless.AppProfiles
 import org.migor.feedless.ResumableHarvestException
 import org.migor.feedless.document.DocumentDAO
@@ -60,7 +61,9 @@ class PipelineJob internal constructor() {
 
   private fun processSourcePipeline(corrId: String, sourceId: UUID, jobs: List<SourcePipelineJobEntity>) {
     try {
-      sourceService.processSourcePipeline(corrId, sourceId, jobs)
+      runBlocking {
+        sourceService.processSourcePipeline(corrId, sourceId, jobs)
+      }
     } catch (t: Throwable) {
       if (t !is ResumableHarvestException) {
         log.warn("[$corrId] processSourcePipeline failed ${t.message}]")

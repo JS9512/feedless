@@ -15,9 +15,12 @@ import java.util.stream.Stream
 @Repository
 @Profile(AppProfiles.database)
 interface SourceDAO : JpaRepository<SourceEntity, UUID> {
-  fun findAllByRepositoryIdOrderByCreatedAtDesc(id: UUID): List<SourceEntity>
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Query("""SELECT DISTINCT s FROM SourceEntity s
+    JOIN FETCH s.actions
+    WHERE s.repositoryId = :id""")
+  fun findAllByRepositoryIdOrderByCreatedAtDesc(@Param("id") id: UUID): List<SourceEntity>
+
   @Modifying
   @Query(
     """
@@ -32,6 +35,4 @@ interface SourceDAO : JpaRepository<SourceEntity, UUID> {
     @Param("erroneous") erroneous: Boolean,
     @Param("errorMessage") errorMessage: String? = null
   )
-
-  fun streamAllByRepositoryIdAndErroneousIsFalse(id: UUID): Stream<SourceEntity>
 }
